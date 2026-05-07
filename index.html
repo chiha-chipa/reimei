@@ -293,7 +293,9 @@ async function apiCreate(entity, data) {
     headers: { "Content-Type": "application/json", "x-app-id": APP_ID, "x-api-role": "service" },
     body: JSON.stringify(data)
   });
-  return res.json();
+  const json = await res.json();
+  if (!res.ok) throw new Error(`${res.status}: ${JSON.stringify(json)}`);
+  return json;
 }
 async function apiUpdate(entity, id, data) {
   const res = await fetch(`${ENTITIES_URL}/${entity}/${id}`, {
@@ -301,14 +303,20 @@ async function apiUpdate(entity, id, data) {
     headers: { "Content-Type": "application/json", "x-app-id": APP_ID, "x-api-role": "service" },
     body: JSON.stringify(data)
   });
-  return res.json();
+  const json = await res.json();
+  if (!res.ok) throw new Error(`${res.status}: ${JSON.stringify(json)}`);
+  return json;
 }
 async function apiDelete(entity, id) {
   const res = await fetch(`${ENTITIES_URL}/${entity}/${id}`, {
     method: "DELETE",
     headers: { "x-app-id": APP_ID, "x-api-role": "service" }
   });
-  return res.ok;
+  if (!res.ok) {
+    const json = await res.json().catch(() => ({}));
+    throw new Error(`${res.status}: ${JSON.stringify(json)}`);
+  }
+  return true;
 }
 
 // ---- 認証 ----
@@ -532,15 +540,15 @@ document.getElementById("addBtn").onclick = async () => {
   };
 
   document.getElementById("addStatus").textContent = "追加中...";
-  const result = await apiCreate("WordbookEntry", data);
-  if (result.id) {
+  try {
+    const result = await apiCreate("WordbookEntry", data);
     document.getElementById("addStatus").textContent = "追加しました！";
     ["wordInput","enInput","jpInput","aliasInput","noteInput"].forEach(id => document.getElementById(id).value = "");
     document.getElementById("tagInput").value = "";
     document.getElementById("anonCheck").checked = false;
     await loadEntries();
-  } else {
-    document.getElementById("addStatus").textContent = "エラーが発生しました";
+  } catch(e) {
+    document.getElementById("addStatus").textContent = "エラー: " + e.message;
   }
 };
 
@@ -575,12 +583,12 @@ document.getElementById("saveEditBtn").onclick = async () => {
   };
 
   document.getElementById("editStatus").textContent = "保存中...";
-  const result = await apiUpdate("WordbookEntry", editingId, data);
-  if (result.id) {
+  try {
+    await apiUpdate("WordbookEntry", editingId, data);
     document.getElementById("editDialog").close();
     await loadEntries();
-  } else {
-    document.getElementById("editStatus").textContent = "エラーが発生しました";
+  } catch(e) {
+    document.getElementById("editStatus").textContent = "エラー: " + e.message;
   }
 };
 
