@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ROOC スキル登録フォーム</title>
+<style>
+:root {
+  --bg: #f5f3ef;
+  --surface: #faf8f5;
+  --border: #d8d0c8;
+  --text: #3a3530;
+  --text-muted: #8a8078;
+  --accent: #9a8a7a;
+  --radius: 8px;
+  --suggest-bg: #faf8f5;
+  --suggest-hover: #ede8e2;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Hiragino Kaku Gothic ProN', 'Noto Sans JP', sans-serif;
+  font-size: 14px;
+  min-height: 100vh;
+}
+
+header {
+  background: #4a4540;
+  color: #f0ece6;
+  padding: 14px 24px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+header h1 {
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+}
+
+header .version {
+  margin-left: auto;
+  font-size: 0.65rem;
+  color: #8a8078;
+}
+
+.container {
+  max-width: 720px;
+  margin: 32px auto;
+  padding: 0 16px;
+}
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 28px;
+  margin-bottom: 24px;
+}
+
+.card h2 {
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  margin-bottom: 20px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border);
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.form-row.single {
+  grid-template-columns: 1fr;
+}
+
+.form-row.triple {
+  grid-template-columns: 1fr 1fr 1fr;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  letter-spacing: 0.04em;
+}
+
+label .required {
+  color: #c27878;
+  margin-left: 3px;
+}
+
+label .sub {
+  font-weight: 400;
+  color: #aaa09a;
+}
+
+input[type="text"],
+select,
+textarea {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 9px 12px;
+  font-size: 13px;
+  color: var(--text);
+  font-family: inherit;
+  transition: border-color 0.15s;
+  outline: none;
+  width: 100%;
+}
+
+input[type="text"]:focus,
+select:focus,
+textarea:focus {
+  border-color: var(--accent);
+}
+
+textarea {
+  resize: vertical;
+  min-height: 80px;
+  line-height: 1.6;
+}
+
+select {
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%238a8078' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 32px;
+}
+
+#job_select {
+  border-left: 4px solid var(--border);
+  transition: border-color 0.2s;
+}
+
+/* 動的行共通 */
+.dynamic-section {
+  margin-bottom: 16px;
+}
+
+.dynamic-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* タグ行 */
+.tag-input-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  position: relative;
+}
+
+.tag-input-row input {
+  flex: 1;
+}
+
+/* 固定数値行 */
+.fixed-num-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.fixed-num-row .fixed-label {
+  width: 140px;
+  flex-shrink: 0;
+  font-size: 13px;
+  color: var(--text-muted);
+  font-weight: 600;
+  padding: 9px 12px;
+  background: #eee8e0;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+
+.fixed-num-row .fixed-value {
+  flex: 1;
+}
+
+.fixed-num-row.removed {
+  display: none;
+}
+
+/* その他（追加）数値行 */
+.extra-num-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  position: relative;
+}
+
+.extra-num-row .extra-label {
+  width: 140px;
+  flex-shrink: 0;
+  position: relative;
+}
+
+.extra-num-row .extra-label input {
+  width: 100%;
+}
+
+.extra-num-row .extra-value {
+  flex: 1;
+}
+
+.remove-btn {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 6px 10px;
+  font-size: 14px;
+  line-height: 1;
+  transition: background 0.1s;
+  flex-shrink: 0;
+}
+
+.remove-btn:hover {
+  background: #ede8e2;
+}
+
+/* 固定行の×は少し控えめに */
+.fixed-num-row .remove-btn {
+  color: #bbb0a8;
+  border-color: #e0d8d0;
+}
+
+.add-row-btn {
+  margin-top: 8px;
+  background: none;
+  border: 1px dashed var(--border);
+  border-radius: 6px;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 7px 14px;
+  font-size: 12px;
+  font-family: inherit;
+  transition: background 0.1s, border-color 0.1s;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.add-row-btn:hover {
+  background: #ede8e2;
+  border-color: var(--accent);
+}
+
+/* 列ヘッダー */
+.num-header {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 6px;
+  padding-right: 42px;
+}
+
+.num-header span {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+.num-header .lh { width: 140px; flex-shrink: 0; }
+.num-header .vh { flex: 1; }
+
+/* サジェスト */
+.suggest-box {
+  position: absolute;
+  top: calc(100% + 2px);
+  left: 0;
+  right: 0;
+  background: var(--suggest-bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  z-index: 100;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+
+.suggest-item {
+  padding: 8px 12px;
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--text);
+  transition: background 0.1s;
+}
+
+.suggest-item:hover,
+.suggest-item.active {
+  background: var(--suggest-hover);
+}
+
+/* 区切り */
+.num-divider {
+  border: none;
+  border-top: 1px dashed var(--border);
+  margin: 12px 0;
+}
+
+/* 送信 */
+.submit-area {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.btn-reset {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 10px 20px;
+  font-size: 13px;
+  font-family: inherit;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: background 0.1s;
+}
+
+.btn-reset:hover { background: #ede8e2; }
+
+.btn-submit {
+  background: #6a6058;
+  border: none;
+  border-radius: 6px;
+  padding: 10px 28px;
+  font-size: 13px;
+  font-family: inherit;
+  color: #f5f0ea;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background 0.15s;
+}
+
+.btn-submit:hover { background: #5a5048; }
+
+.toast {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  background: #4a4540;
+  color: #f0ece6;
+  padding: 12px 20px;
+  border-radius: 8px;
+  font-size: 13px;
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity 0.25s, transform 0.25s;
+  pointer-events: none;
+  z-index: 200;
+}
+
+.toast.show { opacity: 1; transform: translateY(0); }
+.toast.error { background: #b06060; }
+
+.submitter-section {
+  border-top: 1px solid var(--border);
+  margin-top: 20px;
+  padding-top: 20px;
+}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>ROOC スキル登録</h1>
+  <span class="version">v20260507-3</span>
+</header>
+
+<div class="container">
+  <div class="card">
+    <h2>基本情報</h2>
+
+    <div class="form-row single">
+      <div class="form-group">
+        <label>職業 <span class="required">*</span></label>
+        <select id="job_select">
+          <option value="">-- 職業を選択 --</option>
+          <optgroup label="1st Job">
+            <option value="69fc33e2df082ea6472b99ef" data-color="#c27878">ソードマン / Swordman</option>
+            <option value="69fc33e2df082ea6472b99f0" data-color="#7aad85">アコライト / Acolyte</option>
+            <option value="69fc33e2df082ea6472b99f1" data-color="#7090c2">マジシャン / Magician</option>
+            <option value="69fc33e2df082ea6472b99f2" data-color="#c2b070">アーチャー / Archer</option>
+            <option value="69fc33e2df082ea6472b99f3" data-color="#c29060">マーチャント / Merchant</option>
+            <option value="69fc33e2df082ea6472b99f4" data-color="#9070c2">シーフ / Thief</option>
+            <option value="69fc33e2df082ea6472b99f5" data-color="#d88aa8">ウィッチ / Witch</option>
+          </optgroup>
+          <optgroup label="2nd Job">
+            <option value="69fc33f2df082ea6472b99f9" data-color="#c27878">ナイト / Knight</option>
+            <option value="69fc33f2df082ea6472b99fa" data-color="#c27878">クルセイダー / Crusader</option>
+            <option value="69fc33f2df082ea6472b99fb" data-color="#7aad85">プリースト / Priest</option>
+            <option value="69fc33f2df082ea6472b99fc" data-color="#7aad85">モンク / Monk</option>
+            <option value="69fc33f2df082ea6472b99fd" data-color="#7090c2">ウィザード / Wizard</option>
+            <option value="69fc33f2df082ea6472b99fe" data-color="#7090c2">セージ / Sage</option>
+            <option value="69fc33f2df082ea6472b99ff" data-color="#c2b070">ハンター / Hunter</option>
+            <option value="69fc33f2df082ea6472b9a00" data-color="#c2b070">バード / Bard ♦</option>
+            <option value="69fc33f2df082ea6472b9a01" data-color="#c2b070">ダンサー / Dancer ♥</option>
+            <option value="69fc33f2df082ea6472b9a02" data-color="#c29060">ブラックスミス / Blacksmith</option>
+            <option value="69fc33f2df082ea6472b9a03" data-color="#c29060">アルケミスト / Alchemist</option>
+            <option value="69fc33f2df082ea6472b9a04" data-color="#9070c2">アサシン / Assassin</option>
+            <option value="69fc33f2df082ea6472b9a05" data-color="#9070c2">ローグ / Rogue</option>
+            <option value="69fc33f2df082ea6472b9a06" data-color="#d88aa8">サモナー / Summoner</option>
+          </optgroup>
+          <optgroup label="Advanced 2nd Job">
+            <option value="69fc3406df082ea6472b9a08" data-color="#c27878">ロードナイト / Lord Knight</option>
+            <option value="69fc3406df082ea6472b9a09" data-color="#c27878">パラディン / Paladin</option>
+            <option value="69fc3406df082ea6472b9a0a" data-color="#7aad85">ハイプリースト / High Priest</option>
+            <option value="69fc3406df082ea6472b9a0b" data-color="#7aad85">チャンピオン / Champion</option>
+            <option value="69fc3406df082ea6472b9a0c" data-color="#7090c2">ハイウィザード / High Wizard</option>
+            <option value="69fc3406df082ea6472b9a0d" data-color="#7090c2">プロフェッサー / Professor</option>
+            <option value="69fc3406df082ea6472b9a0e" data-color="#c2b070">スナイパー / Sniper</option>
+            <option value="69fc3406df082ea6472b9a0f" data-color="#c2b070">クラウン / Clown</option>
+            <option value="69fc3406df082ea6472b9a10" data-color="#c2b070">ジプシー / Gypsy</option>
+            <option value="69fc3406df082ea6472b9a11" data-color="#c29060">ホワイトスミス / Whitesmith</option>
+            <option value="69fc3406df082ea6472b9a12" data-color="#c29060">クリエイター / Creator</option>
+            <option value="69fc3406df082ea6472b9a13" data-color="#9070c2">アサシンクロス / Assassin Cross</option>
+            <option value="69fc3406df082ea6472b9a14" data-color="#9070c2">チェイサー / Chaser</option>
+            <option value="69fc3406df082ea6472b9a15" data-color="#d88aa8">ハイサモナー / High Summoner</option>
+          </optgroup>
+        </select>
+      </div>
+    </div>
+
+    <div class="form-row triple">
+      <div class="form-group">
+        <label>スキル名（日本語）</label>
+        <input type="text" id="name_ja" placeholder="例：マグナムブレイク">
+      </div>
+      <div class="form-group">
+        <label>スキル名（英語）<span class="required">*</span></label>
+        <input type="text" id="name_en" placeholder="例：Magnum Break">
+      </div>
+      <div class="form-group">
+        <label>スキル名（中国語）<span class="sub"> 任意</span></label>
+        <input type="text" id="name_cn" placeholder="例：碎裂打击">
+      </div>
+    </div>
+
+    <!-- スキルタイプ -->
+    <div class="dynamic-section">
+      <label style="display:block;margin-bottom:8px;">
+        スキルタイプ <span class="required">*</span>
+        <span class="sub">（最大4つ）</span>
+      </label>
+      <div class="dynamic-rows" id="tag_inputs"></div>
+      <button class="add-row-btn" id="add_tag_btn">
+        <span style="font-size:16px;line-height:1;">＋</span> にょきっと追加
+      </button>
+    </div>
+
+    <div class="form-row single">
+      <div class="form-group">
+        <label>スキル説明 <span class="required">*</span></label>
+        <textarea id="description" placeholder="スキルの効果を入力"></textarea>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>数値データ</h2>
+
+    <div class="num-header">
+      <span class="lh">項目名</span>
+      <span class="vh">値</span>
+    </div>
+
+    <!-- 固定4項目 -->
+    <div id="fixed_num_rows">
+      <div class="fixed-num-row" id="row_cast_time">
+        <div class="fixed-label">詠唱時間</div>
+        <div class="fixed-value">
+          <input type="text" id="cast_time" placeholder="例：2s / 無">
+        </div>
+        <button class="remove-btn" onclick="removeFixed('row_cast_time')">×</button>
+      </div>
+      <div class="fixed-num-row" id="row_cooldown">
+        <div class="fixed-label">クールタイム</div>
+        <div class="fixed-value">
+          <input type="text" id="cooldown" placeholder="例：5s">
+        </div>
+        <button class="remove-btn" onclick="removeFixed('row_cooldown')">×</button>
+      </div>
+      <div class="fixed-num-row" id="row_sp_cost">
+        <div class="fixed-label">SP消費</div>
+        <div class="fixed-value">
+          <input type="text" id="sp_cost" placeholder="例：20">
+        </div>
+        <button class="remove-btn" onclick="removeFixed('row_sp_cost')">×</button>
+      </div>
+      <div class="fixed-num-row" id="row_delay">
+        <div class="fixed-label">ディレイ</div>
+        <div class="fixed-value">
+          <input type="text" id="delay" placeholder="例：1s">
+        </div>
+        <button class="remove-btn" onclick="removeFixed('row_delay')">×</button>
+      </div>
+    </div>
+
+    <!-- その他（追加項目） -->
+    <hr class="num-divider">
+    <div class="dynamic-rows" id="extra_num_inputs"></div>
+    <button class="add-row-btn" id="add_extra_btn">
+      <span style="font-size:16px;line-height:1;">＋</span> にょきっと追加
+    </button>
+
+    <div class="form-row single" style="margin-top:20px;">
+      <div class="form-group">
+        <label>備考</label>
+        <textarea id="note" placeholder="補足・注意点など" style="min-height:60px;"></textarea>
+      </div>
+    </div>
+
+    <div class="submitter-section">
+      <div class="form-group">
+        <label>投稿者名 <span class="required">*</span></label>
+        <input type="text" id="submitted_by" placeholder="キャラ名またはニックネーム" style="max-width:280px;">
+      </div>
+    </div>
+
+    <div class="submit-area">
+      <button class="btn-reset" id="reset_btn">リセット</button>
+      <button class="btn-submit" id="submit_btn">登録する</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const APP_ID = '69fb952d64e717a2079f3487';
+const API_BASE = 'https://app.base44.com/api/apps/' + APP_ID + '/entities';
+
+let allSkillTypes = ['物理', '魔法', '支援', 'パッシブ', '火属性', '水属性', '風属性', '土属性', '聖属性', '闇属性', '無属性', '範囲', '単体', 'バフ', 'デバフ'];
+let allExtraLabels = ['持続時間', '共同クールタイム', '射程', '効果範囲'];
+
+// ===== 職業カラー =====
+const jobSelect = document.getElementById('job_select');
+jobSelect.addEventListener('change', () => {
+  const opt = jobSelect.options[jobSelect.selectedIndex];
+  jobSelect.style.borderLeftColor = opt.dataset.color || 'var(--border)';
+});
+
+// ===== 固定行の削除 =====
+function removeFixed(rowId) {
+  document.getElementById(rowId).classList.add('removed');
+}
+
+// ===== サジェスト =====
+function attachSuggest(input, getList) {
+  let box = null;
+  let activeIdx = -1;
+
+  function show(list) {
+    hide();
+    if (!list.length) return;
+    box = document.createElement('div');
+    box.className = 'suggest-box';
+    activeIdx = -1;
+    list.forEach(item => {
+      const el = document.createElement('div');
+      el.className = 'suggest-item';
+      el.textContent = item;
+      el.addEventListener('mousedown', e => {
+        e.preventDefault();
+        input.value = item;
+        hide();
+      });
+      box.appendChild(el);
+    });
+    input.parentElement.style.position = 'relative';
+    input.parentElement.appendChild(box);
+  }
+
+  function hide() {
+    if (box) { box.remove(); box = null; }
+    activeIdx = -1;
+  }
+
+  input.addEventListener('input', () => {
+    const val = input.value.trim();
+    if (!val) { hide(); return; }
+    show(getList(val));
+  });
+
+  input.addEventListener('keydown', e => {
+    if (!box) return;
+    const items = box.querySelectorAll('.suggest-item');
+    if (e.key === 'ArrowDown') { e.preventDefault(); activeIdx = Math.min(activeIdx + 1, items.length - 1); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); activeIdx = Math.max(activeIdx - 1, 0); }
+    else if (e.key === 'Enter') { e.preventDefault(); if (activeIdx >= 0) { input.value = items[activeIdx].textContent; hide(); } }
+    else if (e.key === 'Escape') { hide(); }
+    items.forEach((el, i) => el.classList.toggle('active', i === activeIdx));
+  });
+
+  input.addEventListener('blur', () => setTimeout(hide, 150));
+}
+
+// ===== タグ（スキルタイプ） =====
+const tagContainer = document.getElementById('tag_inputs');
+const addTagBtn = document.getElementById('add_tag_btn');
+const MAX_TAGS = 4;
+
+function getTagRows() { return tagContainer.querySelectorAll('.tag-input-row'); }
+
+function updateTagState() {
+  const rows = getTagRows();
+  rows.forEach(row => {
+    row.querySelector('.remove-btn').style.visibility = rows.length > 1 ? 'visible' : 'hidden';
+  });
+  addTagBtn.style.display = rows.length >= MAX_TAGS ? 'none' : 'flex';
+}
+
+function createTagRow(placeholder) {
+  const row = document.createElement('div');
+  row.className = 'tag-input-row';
+
+  const input = document.createElement('input');
+  input.type = 'text';
+  input.placeholder = placeholder || 'タイプを入力';
+  input.autocomplete = 'off';
+  attachSuggest(input, val => allSkillTypes.filter(t => t.includes(val)));
+
+  const btn = document.createElement('button');
+  btn.className = 'remove-btn';
+  btn.textContent = '×';
+  btn.addEventListener('click', () => {
+    if (getTagRows().length <= 1) return;
+    row.remove();
+    updateTagState();
+  });
+
+  row.appendChild(input);
+  row.appendChild(btn);
+  return row;
+}
+
+function initTags() {
+  tagContainer.innerHTML = '';
+  tagContainer.appendChild(createTagRow('例：物理'));
+  tagContainer.appendChild(createTagRow('例：火属性'));
+  updateTagState();
+}
+
+addTagBtn.addEventListener('click', () => {
+  if (getTagRows().length >= MAX_TAGS) return;
+  const row = createTagRow('タイプを入力');
+  tagContainer.appendChild(row);
+  updateTagState();
+  row.querySelector('input').focus();
+});
+
+// ===== その他（追加）数値行 =====
+const extraContainer = document.getElementById('extra_num_inputs');
+
+function createExtraRow() {
+  const row = document.createElement('div');
+  row.className = 'extra-num-row';
+
+  const labelWrap = document.createElement('div');
+  labelWrap.className = 'extra-label';
+  const labelInput = document.createElement('input');
+  labelInput.type = 'text';
+  labelInput.placeholder = '項目名';
+  labelInput.autocomplete = 'off';
+  attachSuggest(labelInput, val => allExtraLabels.filter(l => l.includes(val)));
+  labelWrap.appendChild(labelInput);
+
+  const valueWrap = document.createElement('div');
+  valueWrap.className = 'extra-value';
+  const valueInput = document.createElement('input');
+  valueInput.type = 'text';
+  valueInput.placeholder = '値を入力';
+  valueWrap.appendChild(valueInput);
+
+  const btn = document.createElement('button');
+  btn.className = 'remove-btn';
+  btn.textContent = '×';
+  btn.addEventListener('click', () => row.remove());
+
+  row.appendChild(labelWrap);
+  row.appendChild(valueWrap);
+  row.appendChild(btn);
+  return row;
+}
+
+document.getElementById('add_extra_btn').addEventListener('click', () => {
+  const row = createExtraRow();
+  extraContainer.appendChild(row);
+  row.querySelector('.extra-label input').focus();
+});
+
+// ===== 初期化 =====
+initTags();
+
+// ===== トースト =====
+function showToast(msg, isError) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast' + (isError ? ' error' : '') + ' show';
+  setTimeout(() => t.className = 'toast' + (isError ? ' error' : ''), 2500);
+}
+
+// ===== 送信 =====
+document.getElementById('submit_btn').addEventListener('click', async () => {
+  const job_id = jobSelect.value;
+  const name_en = document.getElementById('name_en').value.trim();
+  const description = document.getElementById('description').value.trim();
+  const submitted_by = document.getElementById('submitted_by').value.trim();
+
+  const skill_type = Array.from(getTagRows())
+    .map(r => r.querySelector('input').value.trim())
+    .filter(v => v);
+
+  if (!job_id) return showToast('職業を選択してください', true);
+  if (!name_en) return showToast('スキル名（英語）を入力してください', true);
+  if (!description) return showToast('スキル説明を入力してください', true);
+  if (!skill_type.length) return showToast('スキルタイプを1つ以上入力してください', true);
+  if (!submitted_by) return showToast('投稿者名を入力してください', true);
+
+  // 固定フィールド（非表示になってたら空文字）
+  const getFixed = (rowId, inputId) => {
+    const row = document.getElementById(rowId);
+    if (row.classList.contains('removed')) return '';
+    return document.getElementById(inputId).value.trim();
+  };
+
+  const cast_time = getFixed('row_cast_time', 'cast_time');
+  const cooldown = getFixed('row_cooldown', 'cooldown');
+  const sp_cost = getFixed('row_sp_cost', 'sp_cost');
+  const delay = getFixed('row_delay', 'delay');
+
+  // その他フィールドをオブジェクトに
+  const extra_fields = {};
+  extraContainer.querySelectorAll('.extra-num-row').forEach(row => {
+    const lbl = row.querySelector('.extra-label input').value.trim();
+    const val = row.querySelector('.extra-value input').value.trim();
+    if (lbl) extra_fields[lbl] = val;
+  });
+
+  const payload = {
+    job_id,
+    name_ja: document.getElementById('name_ja').value.trim(),
+    name_en,
+    name_cn: document.getElementById('name_cn').value.trim(),
+    skill_type,
+    description,
+    cast_time,
+    cooldown,
+    sp_cost,
+    delay,
+    extra_fields,
+    note: document.getElementById('note').value.trim(),
+    submitted_by,
+  };
+
+  const btn = document.getElementById('submit_btn');
+  btn.disabled = true;
+  btn.textContent = '送信中...';
+
+  try {
+    const res = await fetch(`${API_BASE}/Skill`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    if (!res.ok) throw new Error(await res.text());
+
+    // サジェスト候補に追加
+    skill_type.forEach(t => { if (!allSkillTypes.includes(t)) allSkillTypes.push(t); });
+    Object.keys(extra_fields).forEach(l => { if (!allExtraLabels.includes(l)) allExtraLabels.push(l); });
+
+    showToast('登録しました！');
+    document.getElementById('reset_btn').click();
+  } catch (e) {
+    console.error(e);
+    showToast('エラーが発生しました', true);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '登録する';
+  }
+});
+
+// ===== リセット =====
+document.getElementById('reset_btn').addEventListener('click', () => {
+  ['name_ja', 'name_en', 'name_cn', 'description', 'note', 'submitted_by',
+   'cast_time', 'cooldown', 'sp_cost', 'delay'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  // 固定行を復活
+  ['row_cast_time', 'row_cooldown', 'row_sp_cost', 'row_delay'].forEach(id => {
+    document.getElementById(id).classList.remove('removed');
+  });
+  jobSelect.value = '';
+  jobSelect.style.borderLeftColor = 'var(--border)';
+  extraContainer.innerHTML = '';
+  initTags();
+});
+</script>
+</body>
+</html>
