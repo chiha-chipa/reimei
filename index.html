@@ -359,24 +359,27 @@ async function doSignin() {
 }
 
 function updateUserBar() {
-  const bar = document.getElementById("userBar");
   const statusEl = document.getElementById("userStatus");
   const signinBtn = document.getElementById("signinBtn");
   const form = document.getElementById("entryForm");
 
+  // 古いリスナーを消すためにクローンで置き換え
+  const newBtn = signinBtn.cloneNode(true);
+  signinBtn.parentNode.replaceChild(newBtn, signinBtn);
+
   if (currentUser) {
     statusEl.innerHTML = `サインイン中: <span class="author-tag author-${currentUser.display_color}">${currentUser.username}</span>`;
-    signinBtn.textContent = "サインアウト";
-    signinBtn.onclick = () => {
+    newBtn.textContent = "サインアウト";
+    newBtn.addEventListener("click", () => {
       currentUser = null;
       localStorage.removeItem("roo_wordbook_session");
       updateUserBar();
-    };
+    });
     form.style.display = "";
   } else {
     statusEl.textContent = "投稿・編集するにはサインインしてください";
-    signinBtn.textContent = "サインイン / 新規登録";
-    signinBtn.onclick = () => document.getElementById("signinDialog").showModal();
+    newBtn.textContent = "サインイン / 新規登録";
+    newBtn.addEventListener("click", () => document.getElementById("signinDialog").showModal());
     form.style.display = "none";
   }
 }
